@@ -1,6 +1,6 @@
-# My Project
+# Price Tracking
 
-A simple project template.
+A price tracking application to monitor product prices across different platforms.
 
 ## Getting Started
 

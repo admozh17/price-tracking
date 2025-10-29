@@ -1,7 +1,7 @@
 {
-  "name": "my-project",
+  "name": "price-tracking",
   "version": "1.0.0",
-  "description": "A simple project template",
+  "description": "A price tracking application",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
