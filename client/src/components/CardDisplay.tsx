@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ExternalLink, Heart, HeartOff, TrendingUp, Eye } from 'lucide-react';
+import { ExternalLink, Heart, HeartOff, TrendingUp, Eye, Download } from 'lucide-react';
 import { Card, PriceType } from '../types';
+import { cardAPI } from '../services/api';
 import {
   formatPrice,
   formatRarity,
@@ -17,6 +18,7 @@ interface CardDisplayProps {
   onAddToWatchlist?: (cardId: string, priceType: PriceType, targetPrice: number) => void;
   onRemoveFromWatchlist?: (cardId: string, priceType: PriceType) => void;
   onViewDetails?: (cardId: string) => void;
+  onHistoricalDataImported?: () => void;
   isInWatchlist?: boolean;
   showWatchlistControls?: boolean;
   compact?: boolean;
@@ -27,6 +29,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   onAddToWatchlist,
   onRemoveFromWatchlist,
   onViewDetails,
+  onHistoricalDataImported,
   isInWatchlist = false,
   showWatchlistControls = true,
   compact = false
@@ -36,6 +39,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   const [showWatchlistForm, setShowWatchlistForm] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [importingHistorical, setImportingHistorical] = useState(false);
 
   const availablePriceTypes: PriceType[] = ([
     'usd', 'usd_foil', 'usd_etched', 'eur', 'eur_foil', 'tix'
@@ -55,6 +59,20 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   const handleRemoveFromWatchlist = () => {
     if (onRemoveFromWatchlist) {
       onRemoveFromWatchlist(card.id, selectedPriceType);
+    }
+  };
+
+  const handleImportHistoricalData = async () => {
+    setImportingHistorical(true);
+    try {
+      await cardAPI.importHistoricalPrices(card.id);
+      if (onHistoricalDataImported) {
+        onHistoricalDataImported();
+      }
+    } catch (error) {
+      console.error('Failed to import historical data:', error);
+    } finally {
+      setImportingHistorical(false);
     }
   };
 
@@ -189,6 +207,20 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                   <span>View Charts</span>
                 </button>
               )}
+
+              <button
+                onClick={handleImportHistoricalData}
+                disabled={importingHistorical}
+                className="flex items-center space-x-1 px-3 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 transition-colors"
+                title="Import 90 days of historical price data from MTGJSON"
+              >
+                {importingHistorical ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>{importingHistorical ? 'Importing...' : 'Import History'}</span>
+              </button>
               
               <a
                 href={card.scryfall_uri}

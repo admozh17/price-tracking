@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const scryfallAPI = require('./scryfallAPI');
+const historicalPrices = require('./historicalPrices');
 const { 
   saveCard, 
   savePriceHistory, 
@@ -336,6 +337,93 @@ router.get('/market/overview', async (req, res) => {
     console.error('Market overview error:', error);
     res.status(500).json({ 
       error: 'Failed to get market overview', 
+      message: error.message 
+    });
+  }
+});
+
+// Import historical prices for a specific card
+router.post('/prices/import/:cardId', async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    
+    const card = await getCard(cardId);
+    if (!card) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    console.log(`Starting historical price import for: ${card.name}`);
+    const result = await historicalPrices.bulkImportHistoricalPrices([card]);
+    
+    res.json({
+      success: true,
+      card_name: card.name,
+      imported: result.imported,
+      message: `Imported historical prices for ${card.name}`
+    });
+  } catch (error) {
+    console.error('Historical import error:', error);
+    res.status(500).json({ 
+      error: 'Failed to import historical prices', 
+      message: error.message 
+    });
+  }
+});
+
+// Import historical prices for all cards in watchlist
+router.post('/prices/import-watchlist', async (req, res) => {
+  try {
+    const watchlist = await getWatchlist();
+    const cardIds = [...new Set(watchlist.map(item => item.card_id))];
+    
+    const cards = [];
+    for (const cardId of cardIds) {
+      const card = await getCard(cardId);
+      if (card) {
+        cards.push(card);
+      }
+    }
+
+    if (cards.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No cards in watchlist to import prices for',
+        imported: 0 
+      });
+    }
+
+    console.log(`Starting bulk historical import for ${cards.length} watchlist cards`);
+    const result = await historicalPrices.bulkImportHistoricalPrices(cards);
+    
+    res.json({
+      success: true,
+      imported: result.imported,
+      skipped: result.skipped,
+      total: result.total,
+      message: `Historical price import completed: ${result.imported}/${result.total} cards processed`
+    });
+  } catch (error) {
+    console.error('Bulk historical import error:', error);
+    res.status(500).json({ 
+      error: 'Failed to import historical prices', 
+      message: error.message 
+    });
+  }
+});
+
+// Download/refresh MTGJSON AllPrices data
+router.post('/prices/refresh-data', async (req, res) => {
+  try {
+    await historicalPrices.downloadAllPrices();
+    
+    res.json({
+      success: true,
+      message: 'MTGJSON AllPrices data refreshed successfully'
+    });
+  } catch (error) {
+    console.error('Data refresh error:', error);
+    res.status(500).json({ 
+      error: 'Failed to refresh historical price data', 
       message: error.message 
     });
   }

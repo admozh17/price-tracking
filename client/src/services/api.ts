@@ -84,6 +84,21 @@ export const cardAPI = {
   getMarketOverview: async (days: number = 7) => {
     const response = await api.get(`/cards/market/overview?days=${days}`);
     return response.data;
+  },
+
+  importHistoricalPrices: async (cardId: string) => {
+    const response = await api.post(`/cards/prices/import/${cardId}`);
+    return response.data;
+  },
+
+  importWatchlistHistoricalPrices: async () => {
+    const response = await api.post('/cards/prices/import-watchlist');
+    return response.data;
+  },
+
+  refreshHistoricalData: async () => {
+    const response = await api.post('/cards/prices/refresh-data');
+    return response.data;
   }
 };
 

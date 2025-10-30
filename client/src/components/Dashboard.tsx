@@ -113,6 +113,19 @@ const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
     }
   };
 
+  const handleHistoricalDataImported = async () => {
+    // Refresh the current card detail view if we're viewing one
+    if (selectedCard) {
+      try {
+        const cardDetail = await cardAPI.getCardById(selectedCard.card.id);
+        setSelectedCard(cardDetail);
+      } catch (error) {
+        console.error('Failed to refresh card details after import:', error);
+      }
+    }
+    setError('');
+  };
+
   const handleUpdatePrices = async () => {
     setLoading(prev => ({ ...prev, priceUpdate: true }));
     setError('');
@@ -266,6 +279,7 @@ const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
                           card={card}
                           onAddToWatchlist={handleAddToWatchlist}
                           onViewDetails={handleViewCardDetails}
+                          onHistoricalDataImported={handleHistoricalDataImported}
                           isInWatchlist={watchlist.some(item => item.card_id === card.id)}
                         />
                       ))}
@@ -378,6 +392,7 @@ const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
               card={selectedCard.card}
               onAddToWatchlist={handleAddToWatchlist}
               onRemoveFromWatchlist={handleRemoveFromWatchlist}
+              onHistoricalDataImported={handleHistoricalDataImported}
               isInWatchlist={watchlist.some(item => item.card_id === selectedCard.card.id)}
             />
             

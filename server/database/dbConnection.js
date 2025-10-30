@@ -137,8 +137,8 @@ const cardOperations = {
     return await database.run(sql, params);
   },
 
-  async savePriceHistory(cardId, prices) {
-    const today = new Date().toISOString().split('T')[0];
+  async savePriceHistory(cardId, prices, customDate = null) {
+    const date = customDate || new Date().toISOString().split('T')[0];
     const sql = `
       INSERT OR REPLACE INTO price_history 
       (card_id, date, usd, usd_foil, usd_etched, eur, eur_foil, tix)
@@ -147,7 +147,7 @@ const cardOperations = {
     
     const params = [
       cardId,
-      today,
+      date,
       prices.usd,
       prices.usd_foil,
       prices.usd_etched,
