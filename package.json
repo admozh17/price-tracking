@@ -1,13 +1,29 @@
 {
   "name": "price-tracking",
   "version": "1.0.0",
-  "description": "A price tracking application",
-  "main": "index.js",
+  "description": "A Magic: The Gathering price tracking application with dashboard",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/index.js",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "nodemon server/index.js",
+    "client:dev": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install:all": "npm install && cd client && npm install"
   },
-  "keywords": [],
+  "keywords": ["mtg", "magic-the-gathering", "price-tracking", "trading-cards"],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "sqlite3": "^5.1.6",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "concurrently": "^8.2.2"
+  }
 }

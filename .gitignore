@@ -1,14 +1,25 @@
 # Dependencies
 node_modules/
+client/node_modules/
 *.log
+npm-debug.log*
 
 # Build outputs
 dist/
 build/
+client/build/
+
+# Database files
+data/
+*.db
+*.sqlite
 
 # Environment variables
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # OS generated files
 .DS_Store
@@ -19,3 +30,14 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# TypeScript
+*.tsbuildinfo
+
+# React/Create React App
+client/build/
+client/.env*
+
+# Temporary files
+*.tmp
+*.temp
