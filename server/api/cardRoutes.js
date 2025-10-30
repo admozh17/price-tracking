@@ -9,7 +9,8 @@ const {
   getPriceHistory,
   getWatchlist,
   addToWatchlist,
-  removeFromWatchlist 
+  removeFromWatchlist,
+  database
 } = require('../database/dbConnection');
 
 // Search cards from Scryfall and save to local database
@@ -251,6 +252,90 @@ router.post('/prices/update', async (req, res) => {
     console.error('Price update error:', error);
     res.status(500).json({ 
       error: 'Failed to update prices', 
+      message: error.message 
+    });
+  }
+});
+
+// Get price trends for multiple cards
+router.post('/prices/trends', async (req, res) => {
+  try {
+    const { card_ids, days = 30 } = req.body;
+    
+    if (!card_ids || !Array.isArray(card_ids) || card_ids.length === 0) {
+      return res.status(400).json({ error: 'card_ids array is required' });
+    }
+    
+    const trends = {};
+    
+    for (const cardId of card_ids.slice(0, 10)) { // Limit to 10 cards
+      try {
+        const priceHistory = await getPriceHistory(cardId, days);
+        const card = await getCard(cardId);
+        
+        if (card && priceHistory.length > 0) {
+          trends[cardId] = {
+            card_name: card.name,
+            price_history: priceHistory,
+            summary: {
+              latest_date: priceHistory[0]?.date,
+              oldest_date: priceHistory[priceHistory.length - 1]?.date,
+              data_points: priceHistory.length
+            }
+          };
+        }
+      } catch (error) {
+        console.error(`Failed to get trends for card ${cardId}:`, error.message);
+      }
+    }
+    
+    res.json({ trends });
+  } catch (error) {
+    console.error('Price trends error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get price trends', 
+      message: error.message 
+    });
+  }
+});
+
+// Get market overview with top movers
+router.get('/market/overview', async (req, res) => {
+  try {
+    const { days = 7 } = req.query;
+    
+    // Get cards with recent price data
+    const sql = `
+      SELECT 
+        c.id, c.name, c.set_name, c.rarity,
+        ph1.usd as current_usd,
+        ph2.usd as previous_usd,
+        ((ph1.usd - ph2.usd) / ph2.usd * 100) as change_percent
+      FROM cards c
+      JOIN price_history ph1 ON c.id = ph1.card_id
+      JOIN price_history ph2 ON c.id = ph2.card_id
+      WHERE ph1.date = (SELECT MAX(date) FROM price_history WHERE card_id = c.id)
+      AND ph2.date = (SELECT MAX(date) FROM price_history WHERE card_id = c.id AND date <= date('now', '-${days} days'))
+      AND ph1.usd IS NOT NULL AND ph2.usd IS NOT NULL
+      AND ph2.usd > 0
+      ORDER BY change_percent DESC
+    `;
+    
+    const topMovers = await database.all(sql.replace('${days}', days));
+    
+    const gainers = topMovers.slice(0, 10);
+    const losers = topMovers.slice(-10).reverse();
+    
+    res.json({
+      timeframe_days: parseInt(days),
+      top_gainers: gainers,
+      top_losers: losers,
+      total_cards_tracked: topMovers.length
+    });
+  } catch (error) {
+    console.error('Market overview error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get market overview', 
       message: error.message 
     });
   }

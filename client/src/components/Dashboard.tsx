@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, TrendingUp, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { Heart, TrendingUp, Search, RefreshCw, AlertCircle, BarChart3 } from 'lucide-react';
 import SearchBar from './SearchBar';
 import CardDisplay from './CardDisplay';
 import PriceChart from './PriceChart';
+import PriceHistoryPanel from './PriceHistoryPanel';
+import MarketOverview from './MarketOverview';
 import { cardAPI } from '../services/api';
 import { Card, SearchResult, WatchlistItem, CardDetailResponse, PriceType } from '../types';
 
@@ -21,7 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
     priceUpdate: false
   });
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'search' | 'watchlist' | 'detail'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'watchlist' | 'detail' | 'market'>('search');
 
   // Load watchlist on component mount
   useEffect(() => {
@@ -203,6 +205,20 @@ const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
                 <span>Watchlist ({watchlist.length})</span>
               </div>
             </button>
+            
+            <button
+              onClick={() => setActiveTab('market')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'market'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-4 h-4" />
+                <span>Market</span>
+              </div>
+            </button>
           </nav>
         </div>
 
@@ -365,13 +381,16 @@ const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
               isInWatchlist={watchlist.some(item => item.card_id === selectedCard.card.id)}
             />
             
-            {selectedCard.price_history.length > 0 && (
-              <PriceChart
-                data={selectedCard.price_history}
-                cardName={selectedCard.card.name}
-                height={400}
-              />
-            )}
+            <PriceHistoryPanel card={selectedCard.card} />
+          </div>
+        )}
+
+        {/* Market Tab */}
+        {activeTab === 'market' && (
+          <div className="space-y-6">
+            <MarketOverview 
+              onCardSelect={handleViewCardDetails}
+            />
           </div>
         )}
       </div>

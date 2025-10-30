@@ -71,6 +71,19 @@ export const cardAPI = {
   healthCheck: async () => {
     const response = await api.get('/health');
     return response.data;
+  },
+
+  getPriceTrends: async (cardIds: string[], days: number = 30) => {
+    const response = await api.post('/cards/prices/trends', {
+      card_ids: cardIds,
+      days
+    });
+    return response.data;
+  },
+
+  getMarketOverview: async (days: number = 7) => {
+    const response = await api.get(`/cards/market/overview?days=${days}`);
+    return response.data;
   }
 };
 
